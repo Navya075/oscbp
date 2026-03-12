@@ -7,14 +7,14 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Plane as PlaneIcon, Zap } from 'lucide-react';
+import { PlusCircle, Plane as PlaneIcon } from 'lucide-react';
 
 interface PlaneFormProps {
   onAdd: (plane: Omit<Plane, 'status' | 'arrivalTime' | 'remainingTime'>) => void;
 }
 
 export function PlaneForm({ onAdd }: PlaneFormProps) {
-  const [id, setId] = useState('FLIGHT-' + Math.floor(Math.random() * 900 + 100));
+  const [id, setId] = useState('P-' + Math.floor(Math.random() * 90 + 10));
   const [operation, setOperation] = useState<OperationType>('LANDING');
   const [priority, setPriority] = useState<PriorityType>('NORMAL');
   const [burstTime, setBurstTime] = useState(5);
@@ -22,59 +22,59 @@ export function PlaneForm({ onAdd }: PlaneFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onAdd({ id, operation, priority, burstTime });
-    setId('FLIGHT-' + Math.floor(Math.random() * 900 + 100));
+    setId('P-' + Math.floor(Math.random() * 90 + 10));
   };
 
   return (
-    <Card className="p-6 border-slate-200 shadow-sm bg-white">
-      <div className="flex items-center gap-2 mb-6 pb-4 border-b">
-        <div className="p-1.5 bg-indigo-50 rounded-md text-indigo-600">
-          <Plus className="w-4 h-4" />
+    <Card className="p-6 border-none shadow-sm bg-white rounded-2xl">
+      <div className="flex items-center gap-2 mb-6">
+        <div className="p-2 bg-purple-50 rounded-lg text-purple-500">
+          <PlusCircle className="w-5 h-5" />
         </div>
-        <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500">Dispatch New Flight</h2>
+        <h2 className="text-lg font-bold text-slate-800">Add Plane</h2>
       </div>
       
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-2">
-          <Label htmlFor="plane-id" className="text-[10px] font-extrabold uppercase text-slate-400">Callsign Identifier</Label>
+          <Label htmlFor="plane-id" className="text-sm font-bold text-slate-600">Plane ID</Label>
           <Input 
             id="plane-id" 
             value={id} 
             onChange={e => setId(e.target.value)} 
-            placeholder="e.g. AA123" 
-            className="font-mono font-bold bg-slate-50 border-slate-200 focus:ring-indigo-500"
+            placeholder="e.g. P1" 
+            className="bg-slate-50 border-slate-100 rounded-xl font-bold h-11"
           />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label className="text-[10px] font-extrabold uppercase text-slate-400">Operation</Label>
+            <Label className="text-sm font-bold text-slate-600">Operation</Label>
             <Select value={operation} onValueChange={(v: OperationType) => setOperation(v)}>
-              <SelectTrigger className="bg-slate-50 border-slate-200 text-xs font-bold">
-                <SelectValue placeholder="Action" />
+              <SelectTrigger className="bg-slate-50 border-slate-100 rounded-xl font-medium">
+                <SelectValue placeholder="Select" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="LANDING" className="text-xs font-medium">Landing</SelectItem>
-                <SelectItem value="TAKEOFF" className="text-xs font-medium">Takeoff</SelectItem>
+                <SelectItem value="LANDING">Landing</SelectItem>
+                <SelectItem value="TAKEOFF">Takeoff</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
-            <Label className="text-[10px] font-extrabold uppercase text-slate-400">Severity</Label>
+            <Label className="text-sm font-bold text-slate-600">Priority</Label>
             <Select value={priority} onValueChange={(v: PriorityType) => setPriority(v)}>
-              <SelectTrigger className="bg-slate-50 border-slate-200 text-xs font-bold">
-                <SelectValue placeholder="Urgency" />
+              <SelectTrigger className="bg-slate-50 border-slate-100 rounded-xl font-medium">
+                <SelectValue placeholder="Select" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="NORMAL" className="text-xs font-medium">Routine</SelectItem>
-                <SelectItem value="EMERGENCY" className="text-xs font-medium text-red-600">Emergency</SelectItem>
+                <SelectItem value="NORMAL">Normal</SelectItem>
+                <SelectItem value="EMERGENCY" className="text-red-600">Emergency</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="burst-time" className="text-[10px] font-extrabold uppercase text-slate-400">Runway Duration (Seconds)</Label>
+          <Label htmlFor="burst-time" className="text-sm font-bold text-slate-600">Runway Time (seconds)</Label>
           <Input 
             id="burst-time" 
             type="number" 
@@ -82,14 +82,13 @@ export function PlaneForm({ onAdd }: PlaneFormProps) {
             max="60" 
             value={burstTime} 
             onChange={e => setBurstTime(parseInt(e.target.value) || 1)}
-            className="bg-slate-50 border-slate-200 font-mono font-bold"
+            className="bg-slate-50 border-slate-100 rounded-xl font-bold h-11"
           />
-          <p className="text-[9px] text-slate-400 italic">Estimated time required to clear the runway segment.</p>
         </div>
 
-        <Button type="submit" className="w-full font-extrabold text-xs uppercase tracking-widest bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100 py-6">
-          <PlaneIcon className="w-4 h-4 mr-2" />
-          Queue for Departure/Arrival
+        <Button type="submit" className="w-full gradient-btn font-bold py-6 rounded-xl shadow-lg">
+          <PlaneIcon className="w-5 h-5 mr-2" />
+          Add Plane to Queue
         </Button>
       </form>
     </Card>

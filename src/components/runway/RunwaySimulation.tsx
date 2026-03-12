@@ -9,7 +9,6 @@ import { MetricsDisplay } from './MetricsDisplay';
 import { EventLog } from './EventLog';
 import { SimulationControls } from './SimulationControls';
 import { Card } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { Info } from 'lucide-react';
 
 const INITIAL_RUNWAYS: Runway[] = [
@@ -20,14 +19,13 @@ const INITIAL_RUNWAYS: Runway[] = [
 
 export function RunwaySimulation() {
   const [planes, setPlanes] = useState<Plane[]>([]);
-  const [runways, setRunways] = useState<Runway[]>(INITIAL_RUNWAYS);
+  const [runways, setRunways] = useState<INITIAL_RUNWAYS>(INITIAL_RUNWAYS);
   const [algorithm, setAlgorithm] = useState<SchedulingAlgorithm>('FCFS');
   const [numRunways, setNumRunways] = useState(2);
   const [quantum, setQuantum] = useState(2);
   const [isRunning, setIsRunning] = useState(false);
   const [ticks, setTicks] = useState(0);
   const [logs, setLogs] = useState<SystemEvent[]>([]);
-  const [executionOrder, setExecutionOrder] = useState<string[]>([]);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -43,7 +41,7 @@ export function RunwaySimulation() {
       status: 'WAITING',
     };
     setPlanes(prev => [...prev, newPlane]);
-    addLog(`Flight ${newPlane.id} entered waiting list.`, 'INFO');
+    addLog(`Plane ${newPlane.id} added to queue.`, 'INFO');
   };
 
   const resetSimulation = () => {
@@ -52,8 +50,7 @@ export function RunwaySimulation() {
     setPlanes([]);
     setRunways(prev => prev.map(r => ({ ...r, status: 'FREE', currentPlaneId: undefined })));
     setLogs([]);
-    setExecutionOrder([]);
-    addLog('Traffic simulation reset.', 'WARNING');
+    addLog('Simulation reset.', 'WARNING');
   };
 
   const getNextPlane = useCallback((currentPlanes: Plane[], currentRunwayPlanes: string[]) => {
@@ -87,8 +84,7 @@ export function RunwaySimulation() {
           const newQuantumUsed = (p.quantumUsed || 0) + 1;
 
           if (newRemaining <= 0) {
-            addLog(`Flight ${p.id} successfully completed operation.`, 'SUCCESS');
-            setExecutionOrder(prev => [...prev, p.id]);
+            addLog(`Plane ${p.id} completed its ${p.operation.toLowerCase()}.`, 'SUCCESS');
             updatedRunways = updatedRunways.map(r => 
               r.currentPlaneId === p.id ? { ...r, status: 'FREE', currentPlaneId: undefined } : r
             );
@@ -96,7 +92,7 @@ export function RunwaySimulation() {
           }
 
           if (algorithm === 'ROUND_ROBIN' && newQuantumUsed >= quantum) {
-            addLog(`Time slice expired for ${p.id}. Returning to waiting list.`, 'WARNING');
+            addLog(`Time slice ended for ${p.id}. Returning to queue.`, 'WARNING');
             updatedRunways = updatedRunways.map(r => 
               r.currentPlaneId === p.id ? { ...r, status: 'FREE', currentPlaneId: undefined } : r
             );
@@ -116,7 +112,7 @@ export function RunwaySimulation() {
           if (nextPlane) {
             const planeIdx = updatedPlanes.findIndex(p => p.id === nextPlane.id);
             if (planeIdx !== -1) {
-              addLog(`Flight ${nextPlane.id} assigned to Runway ${r.id}.`, 'SUCCESS');
+              addLog(`Plane ${nextPlane.id} assigned to Runway ${r.id}.`, 'SUCCESS');
               updatedPlanes[planeIdx] = {
                 ...updatedPlanes[planeIdx],
                 status: 'RUNNING',
@@ -148,7 +144,7 @@ export function RunwaySimulation() {
 
   return (
     <div className="airport-grid">
-      {/* Left Column: System Control */}
+      {/* LEFT PANEL: Control & Add Plane */}
       <div className="space-y-6">
         <SimulationControls 
           isRunning={isRunning}
@@ -162,65 +158,49 @@ export function RunwaySimulation() {
           onQuantumChange={setQuantum}
         />
         <PlaneForm onAdd={handleAddPlane} />
-        <Card className="p-4 bg-indigo-50 border-indigo-100 flex gap-3 items-start">
-          <Info className="w-5 h-5 text-indigo-600 mt-0.5" />
+        <Card className="p-4 bg-blue-50 border-none rounded-2xl flex gap-3 items-start">
+          <Info className="w-5 h-5 text-blue-500 mt-0.5" />
           <div className="space-y-1">
-            <h4 className="text-xs font-bold text-indigo-900 uppercase">OS Metaphor</h4>
-            <p className="text-[11px] text-indigo-700 leading-relaxed font-medium">
-              Each <strong>Flight</strong> is a Process. The <strong>Runway</strong> is a CPU core. 
-              The <strong>Strategy</strong> determines which flight gets clearance first.
+            <h4 className="text-xs font-bold text-blue-900 uppercase">Learning Tip</h4>
+            <p className="text-[11px] text-blue-700 leading-relaxed font-medium">
+              Think of each <strong>Runway</strong> as a computer processor (CPU) and each <strong>Plane</strong> as a program running on it.
             </p>
           </div>
         </Card>
       </div>
 
-      {/* Middle Column: Traffic Monitoring */}
+      {/* CENTER PANEL: Runway Status & Queue */}
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-bold text-slate-500 uppercase tracking-widest">Active Runway Matrix</h2>
+          <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest">Runway Status</h2>
           <div className="flex gap-2">
             {Array.from({ length: numRunways }).map((_, i) => (
-              <div key={i} className="px-2 py-0.5 bg-slate-200 text-slate-600 text-[10px] font-bold rounded uppercase">
-                Node {i + 1}
+              <div key={i} className="px-3 py-1 bg-white shadow-sm border border-slate-100 text-slate-500 text-[10px] font-bold rounded-full uppercase">
+                Gate {i + 1}
               </div>
             ))}
           </div>
         </div>
         <RunwayDisplay runways={runways.slice(0, numRunways)} planes={planes} />
-        <QueueDisplay planes={planes} executionOrder={executionOrder} />
+        <QueueDisplay planes={planes} />
       </div>
 
-      {/* Right Column: Analytics & Logs */}
+      {/* RIGHT PANEL: Stats & Logs */}
       <div className="space-y-6">
         <MetricsDisplay planes={planes} ticks={ticks} />
         <EventLog logs={logs} />
-        <Card className="p-6">
-          <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Traffic Summary</h3>
-          <div className="space-y-4 text-sm">
-            <div className="flex justify-between items-center">
-              <span className="text-slate-500 font-medium">Pending Clearance</span>
-              <span className="font-mono font-bold text-slate-900 text-lg">{planes.filter(p => p.status === 'WAITING').length}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-slate-500 font-medium">Operational Load</span>
-              <span className="font-mono font-bold text-indigo-600 text-lg">
-                {Math.round((runways.filter(r => r.status === 'BUSY').length / numRunways) * 100)}%
-              </span>
-            </div>
-          </div>
-          <Separator className="my-6" />
+        <Card className="p-6 border-none shadow-sm bg-[#fff3e0] rounded-2xl">
+          <h3 className="text-sm font-bold text-orange-800 mb-4">Airport Summary</h3>
           <div className="space-y-3">
-            <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-tighter">Operation History</span>
-            <div className="flex flex-wrap gap-1.5 pt-1">
-              {executionOrder.length === 0 ? (
-                <span className="text-[10px] text-slate-400 italic">No flights dispatched.</span>
-              ) : (
-                executionOrder.map((pid, i) => (
-                  <div key={i} className="bg-slate-100 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold text-slate-600 border border-slate-200">
-                    {pid}
-                  </div>
-                ))
-              )}
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-orange-700 font-medium">Waiting to Land/Takeoff</span>
+              <span className="font-bold text-orange-900">{planes.filter(p => p.status === 'WAITING').length}</span>
+            </div>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-orange-700 font-medium">Current Load</span>
+              <span className="font-bold text-orange-900">
+                {Math.round((runways.slice(0, numRunways).filter(r => r.status === 'BUSY').length / numRunways) * 100)}%
+              </span>
             </div>
           </div>
         </Card>
