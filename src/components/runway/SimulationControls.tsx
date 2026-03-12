@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Play, Pause, RotateCcw, Layout, Settings } from 'lucide-react';
+import { Play, Pause, RotateCcw, Settings } from 'lucide-react';
 
 interface SimulationControlsProps {
   isRunning: boolean;
@@ -50,8 +50,11 @@ export function SimulationControls({
                 <SelectValue placeholder="Select Method" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="FCFS">First-Come, First-Served (FIFO)</SelectItem>
-                <SelectItem value="PRIORITY">Priority (Emergency First)</SelectItem>
+                <SelectItem value="FCFS">First-Come, First-Served</SelectItem>
+                <SelectItem value="SJF_NON_PREEMPTIVE">Shortest Job First</SelectItem>
+                <SelectItem value="SJF_PREEMPTIVE">Shortest Remaining Time First</SelectItem>
+                <SelectItem value="PRIORITY_NON_PREEMPTIVE">Priority (Non-Preemptive)</SelectItem>
+                <SelectItem value="PRIORITY_PREEMPTIVE">Priority (Preemptive)</SelectItem>
                 <SelectItem value="ROUND_ROBIN">Time-Sharing (Round Robin)</SelectItem>
               </SelectContent>
             </Select>

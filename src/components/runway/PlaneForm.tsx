@@ -67,6 +67,7 @@ export function PlaneForm({ onAdd }: PlaneFormProps) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="NORMAL">Normal</SelectItem>
+                <SelectItem value="HIGH">High</SelectItem>
                 <SelectItem value="EMERGENCY" className="text-red-600">Emergency</SelectItem>
               </SelectContent>
             </Select>

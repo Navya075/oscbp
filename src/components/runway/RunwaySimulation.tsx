@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Plane, Runway, SchedulingAlgorithm, SystemEvent } from '@/types/simulation';
+import { Plane, Runway, SchedulingAlgorithm, SystemEvent, PriorityType } from '@/types/simulation';
 import { PlaneForm } from './PlaneForm';
 import { RunwayDisplay } from './RunwayDisplay';
 import { QueueDisplay } from './QueueDisplay';
@@ -17,9 +17,15 @@ const INITIAL_RUNWAYS: Runway[] = [
   { id: 3, status: 'FREE' },
 ];
 
+const PRIORITY_VALUES: Record<PriorityType, number> = {
+  'EMERGENCY': 0,
+  'HIGH': 1,
+  'NORMAL': 2,
+};
+
 export function RunwaySimulation() {
   const [planes, setPlanes] = useState<Plane[]>([]);
-  const [runways, setRunways] = useState<INITIAL_RUNWAYS>(INITIAL_RUNWAYS);
+  const [runways, setRunways] = useState<Runway[]>(INITIAL_RUNWAYS);
   const [algorithm, setAlgorithm] = useState<SchedulingAlgorithm>('FCFS');
   const [numRunways, setNumRunways] = useState(2);
   const [quantum, setQuantum] = useState(2);
@@ -53,31 +59,44 @@ export function RunwaySimulation() {
     addLog('Simulation reset.', 'WARNING');
   };
 
-  const getNextPlane = useCallback((currentPlanes: Plane[], currentRunwayPlanes: string[]) => {
-    const waitingPlanes = currentPlanes.filter(p => p.status === 'WAITING' && !currentRunwayPlanes.includes(p.id));
+  const getBestWaitingPlane = useCallback((waitingPlanes: Plane[]) => {
     if (waitingPlanes.length === 0) return null;
 
-    if (algorithm === 'FCFS') {
-      return waitingPlanes.sort((a, b) => a.arrivalTime - b.arrivalTime)[0];
-    } else if (algorithm === 'PRIORITY') {
-      return waitingPlanes.sort((a, b) => {
-        if (a.priority === b.priority) return a.arrivalTime - b.arrivalTime;
-        return a.priority === 'EMERGENCY' ? -1 : 1;
-      })[0];
-    } else if (algorithm === 'ROUND_ROBIN') {
-      return waitingPlanes.sort((a, b) => a.arrivalTime - b.arrivalTime)[0];
+    let sorted = [...waitingPlanes];
+
+    switch (algorithm) {
+      case 'FCFS':
+      case 'ROUND_ROBIN':
+        sorted.sort((a, b) => a.arrivalTime - b.arrivalTime);
+        break;
+      case 'SJF_NON_PREEMPTIVE':
+      case 'SJF_PREEMPTIVE':
+        sorted.sort((a, b) => {
+          if (a.remainingTime === b.remainingTime) return a.arrivalTime - b.arrivalTime;
+          return a.remainingTime - b.remainingTime;
+        });
+        break;
+      case 'PRIORITY_NON_PREEMPTIVE':
+      case 'PRIORITY_PREEMPTIVE':
+        sorted.sort((a, b) => {
+          const pa = PRIORITY_VALUES[a.priority];
+          const pb = PRIORITY_VALUES[b.priority];
+          if (pa === pb) return a.arrivalTime - b.arrivalTime;
+          return pa - pb;
+        });
+        break;
     }
-    return null;
+
+    return sorted[0];
   }, [algorithm]);
 
   const tick = useCallback(() => {
-    setTicks(t => t + 1);
-
     setPlanes(prevPlanes => {
       let updatedPlanes = [...prevPlanes];
       let updatedRunways = [...runways];
+      const currentTime = ticks;
 
-      // 1. Update running planes
+      // 1. Process running planes
       updatedPlanes = updatedPlanes.map(p => {
         if (p.status === 'RUNNING') {
           const newRemaining = p.remainingTime - 1;
@@ -88,15 +107,16 @@ export function RunwaySimulation() {
             updatedRunways = updatedRunways.map(r => 
               r.currentPlaneId === p.id ? { ...r, status: 'FREE', currentPlaneId: undefined } : r
             );
-            return { ...p, status: 'COMPLETED', remainingTime: 0, completionTime: ticks + 1 };
+            return { ...p, status: 'COMPLETED', remainingTime: 0, completionTime: currentTime + 1 };
           }
 
+          // Preemption Check for Round Robin
           if (algorithm === 'ROUND_ROBIN' && newQuantumUsed >= quantum) {
             addLog(`Time slice ended for ${p.id}. Returning to queue.`, 'WARNING');
             updatedRunways = updatedRunways.map(r => 
               r.currentPlaneId === p.id ? { ...r, status: 'FREE', currentPlaneId: undefined } : r
             );
-            return { ...p, status: 'WAITING', quantumUsed: 0, arrivalTime: ticks + 1 };
+            return { ...p, status: 'WAITING', quantumUsed: 0, arrivalTime: currentTime + 1 };
           }
 
           return { ...p, remainingTime: newRemaining, quantumUsed: newQuantumUsed };
@@ -104,11 +124,40 @@ export function RunwaySimulation() {
         return p;
       });
 
-      // 2. Schedule new planes to free runways
+      // 2. Preemption Check for Preemptive Algorithms
+      if (algorithm === 'SJF_PREEMPTIVE' || algorithm === 'PRIORITY_PREEMPTIVE') {
+        updatedRunways.slice(0, numRunways).forEach((r, idx) => {
+          if (r.status === 'BUSY' && r.currentPlaneId) {
+            const runningPlaneIdx = updatedPlanes.findIndex(p => p.id === r.currentPlaneId);
+            const runningPlane = updatedPlanes[runningPlaneIdx];
+            const waitingPlanes = updatedPlanes.filter(p => p.status === 'WAITING');
+            const bestWaiting = getBestWaitingPlane(waitingPlanes);
+
+            if (bestWaiting) {
+              let shouldPreempt = false;
+              if (algorithm === 'SJF_PREEMPTIVE') {
+                shouldPreempt = bestWaiting.remainingTime < runningPlane.remainingTime;
+              } else {
+                shouldPreempt = PRIORITY_VALUES[bestWaiting.priority] < PRIORITY_VALUES[runningPlane.priority];
+              }
+
+              if (shouldPreempt) {
+                addLog(`Preempting ${runningPlane.id} for higher priority ${bestWaiting.id}.`, 'ALERT');
+                updatedPlanes[runningPlaneIdx] = { ...runningPlane, status: 'WAITING', runwayId: undefined };
+                updatedRunways[idx] = { ...r, status: 'FREE', currentPlaneId: undefined };
+              }
+            }
+          }
+        });
+      }
+
+      // 3. Assign new planes to free runways
       const activeRunways = updatedRunways.slice(0, numRunways);
       activeRunways.forEach((r, idx) => {
         if (r.status === 'FREE') {
-          const nextPlane = getNextPlane(updatedPlanes, updatedRunways.map(r => r.currentPlaneId!).filter(Boolean));
+          const waitingPlanes = updatedPlanes.filter(p => p.status === 'WAITING');
+          const nextPlane = getBestWaitingPlane(waitingPlanes);
+          
           if (nextPlane) {
             const planeIdx = updatedPlanes.findIndex(p => p.id === nextPlane.id);
             if (planeIdx !== -1) {
@@ -117,7 +166,7 @@ export function RunwaySimulation() {
                 ...updatedPlanes[planeIdx],
                 status: 'RUNNING',
                 runwayId: r.id,
-                startTime: updatedPlanes[planeIdx].startTime ?? ticks + 1,
+                startTime: updatedPlanes[planeIdx].startTime ?? currentTime,
                 quantumUsed: 0
               };
               updatedRunways[idx] = { ...r, status: 'BUSY', currentPlaneId: nextPlane.id };
@@ -129,7 +178,8 @@ export function RunwaySimulation() {
       setRunways(updatedRunways);
       return updatedPlanes;
     });
-  }, [ticks, algorithm, quantum, numRunways, getNextPlane, runways, addLog]);
+    setTicks(t => t + 1);
+  }, [ticks, algorithm, quantum, numRunways, runways, addLog, getBestWaitingPlane]);
 
   useEffect(() => {
     if (isRunning) {
@@ -144,7 +194,7 @@ export function RunwaySimulation() {
 
   return (
     <div className="airport-grid">
-      {/* LEFT PANEL: Control & Add Plane */}
+      {/* LEFT PANEL */}
       <div className="space-y-6">
         <SimulationControls 
           isRunning={isRunning}
@@ -163,29 +213,20 @@ export function RunwaySimulation() {
           <div className="space-y-1">
             <h4 className="text-xs font-bold text-blue-900 uppercase">Learning Tip</h4>
             <p className="text-[11px] text-blue-700 leading-relaxed font-medium">
-              Think of each <strong>Runway</strong> as a computer processor (CPU) and each <strong>Plane</strong> as a program running on it.
+              A <strong>Runway</strong> is like a <strong>CPU core</strong>. Preemptive methods let higher urgency planes "bump" others off the runway.
             </p>
           </div>
         </Card>
       </div>
 
-      {/* CENTER PANEL: Runway Status & Queue */}
+      {/* CENTER PANEL */}
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest">Runway Status</h2>
-          <div className="flex gap-2">
-            {Array.from({ length: numRunways }).map((_, i) => (
-              <div key={i} className="px-3 py-1 bg-white shadow-sm border border-slate-100 text-slate-500 text-[10px] font-bold rounded-full uppercase">
-                Gate {i + 1}
-              </div>
-            ))}
-          </div>
-        </div>
+        <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest">Runway Status</h2>
         <RunwayDisplay runways={runways.slice(0, numRunways)} planes={planes} />
         <QueueDisplay planes={planes} />
       </div>
 
-      {/* RIGHT PANEL: Stats & Logs */}
+      {/* RIGHT PANEL */}
       <div className="space-y-6">
         <MetricsDisplay planes={planes} ticks={ticks} />
         <EventLog logs={logs} />
