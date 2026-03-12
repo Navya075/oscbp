@@ -42,7 +42,7 @@ export function RunwaySimulation() {
       status: 'WAITING',
     };
     setPlanes(prev => [...prev, newPlane]);
-    addLog(`New request: ${newPlane.id} (${newPlane.operation}) added to queue.`, 'INFO');
+    addLog(`${newPlane.id} requested clearance.`, 'INFO');
   };
 
   const resetSimulation = () => {
@@ -86,22 +86,19 @@ export function RunwaySimulation() {
           const newQuantumUsed = (p.quantumUsed || 0) + 1;
 
           if (newRemaining <= 0) {
-            addLog(`Plane ${p.id} completed ${p.operation}.`, 'SUCCESS');
+            addLog(`Flight ${p.id} completed.`, 'SUCCESS');
             setExecutionOrder(prev => [...prev, p.id]);
-            // Free the runway
             updatedRunways = updatedRunways.map(r => 
               r.currentPlaneId === p.id ? { ...r, status: 'FREE', currentPlaneId: undefined } : r
             );
             return { ...p, status: 'COMPLETED', remainingTime: 0, completionTime: ticks + 1 };
           }
 
-          // Round Robin check
           if (algorithm === 'ROUND_ROBIN' && newQuantumUsed >= quantum) {
-            addLog(`Quantum expired for ${p.id}. Preempting.`, 'WARNING');
+            addLog(`Time slice expired for ${p.id}. Taking turn.`, 'WARNING');
             updatedRunways = updatedRunways.map(r => 
               r.currentPlaneId === p.id ? { ...r, status: 'FREE', currentPlaneId: undefined } : r
             );
-            // Move to end of queue essentially by marking as WAITING and updating arrival to current tick for fairness
             return { ...p, status: 'WAITING', quantumUsed: 0, arrivalTime: ticks + 1 };
           }
 
@@ -118,7 +115,7 @@ export function RunwaySimulation() {
           if (nextPlane) {
             const planeIdx = updatedPlanes.findIndex(p => p.id === nextPlane.id);
             if (planeIdx !== -1) {
-              addLog(`Assigning ${nextPlane.id} to Runway ${r.id}.`, 'SUCCESS');
+              addLog(`Flight ${nextPlane.id} assigned to Runway ${r.id}.`, 'SUCCESS');
               updatedPlanes[planeIdx] = {
                 ...updatedPlanes[planeIdx],
                 status: 'RUNNING',
@@ -150,7 +147,6 @@ export function RunwaySimulation() {
 
   return (
     <div className="airport-grid">
-      {/* Left Column: Configuration & Input */}
       <div className="space-y-6">
         <SimulationControls 
           isRunning={isRunning}
@@ -167,43 +163,39 @@ export function RunwaySimulation() {
         <EventLog logs={logs} />
       </div>
 
-      {/* Center Column: Runway Dashboard & Status */}
       <div className="space-y-6">
-        <div className="grid grid-cols-1 gap-4">
-          <RunwayDisplay runways={runways.slice(0, numRunways)} planes={planes} />
-        </div>
+        <RunwayDisplay runways={runways.slice(0, numRunways)} planes={planes} />
         <QueueDisplay planes={planes} executionOrder={executionOrder} />
       </div>
 
-      {/* Right Column: Metrics & Stats */}
       <div className="space-y-6">
         <MetricsDisplay planes={planes} ticks={ticks} />
         <Card className="p-6">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4">Runway Protocol</h3>
+          <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4">Traffic Summary</h3>
           <div className="space-y-3 text-sm">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Ready Queue</span>
-              <span className="font-mono text-accent">{planes.filter(p => p.status === 'WAITING').length} Planes</span>
+              <span className="text-muted-foreground">Waiting</span>
+              <span className="font-mono font-bold text-primary">{planes.filter(p => p.status === 'WAITING').length} Flights</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Active Cores</span>
-              <span className="font-mono text-accent">{numRunways} Runways</span>
+              <span className="text-muted-foreground">Runways Active</span>
+              <span className="font-mono font-bold text-primary">{numRunways}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Throughput</span>
-              <span className="font-mono text-accent">{(planes.filter(p => p.status === 'COMPLETED').length / (ticks || 1)).toFixed(2)} p/sec</span>
+              <span className="text-muted-foreground">Flights per Second</span>
+              <span className="font-mono font-bold text-primary">{(planes.filter(p => p.status === 'COMPLETED').length / (ticks || 1)).toFixed(2)}</span>
             </div>
           </div>
           <Separator className="my-4" />
           <div className="space-y-2">
-            <span className="text-xs font-bold uppercase text-muted-foreground">Execution Flow</span>
+            <span className="text-xs font-bold uppercase text-muted-foreground">Flight History</span>
             <div className="flex flex-wrap gap-2 pt-2">
               {executionOrder.length === 0 ? (
-                <span className="text-xs text-muted-foreground italic">No completed operations yet</span>
+                <span className="text-xs text-muted-foreground italic">No flights landed or taken off yet.</span>
               ) : (
                 executionOrder.map((pid, i) => (
-                  <div key={i} className="bg-secondary px-2 py-1 rounded text-xs font-mono border">
-                    {i + 1}. {pid}
+                  <div key={i} className="bg-muted px-2 py-1 rounded text-xs font-mono border">
+                    {pid}
                   </div>
                 ))
               )}

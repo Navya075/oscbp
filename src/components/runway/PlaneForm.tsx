@@ -14,7 +14,7 @@ interface PlaneFormProps {
 }
 
 export function PlaneForm({ onAdd }: PlaneFormProps) {
-  const [id, setId] = useState('P-' + Math.floor(Math.random() * 1000));
+  const [id, setId] = useState('FLIGHT-' + Math.floor(Math.random() * 900 + 100));
   const [operation, setOperation] = useState<OperationType>('LANDING');
   const [priority, setPriority] = useState<PriorityType>('NORMAL');
   const [burstTime, setBurstTime] = useState(5);
@@ -22,32 +22,32 @@ export function PlaneForm({ onAdd }: PlaneFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onAdd({ id, operation, priority, burstTime });
-    setId('P-' + Math.floor(Math.random() * 1000));
+    setId('FLIGHT-' + Math.floor(Math.random() * 900 + 100));
   };
 
   return (
     <Card className="p-6">
       <div className="flex items-center gap-2 mb-6">
-        <Plus className="w-4 h-4 text-accent" />
-        <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Request Clearance</h2>
+        <Plus className="w-4 h-4 text-primary" />
+        <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Add New Flight</h2>
       </div>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="plane-id">Flight Identifier</Label>
+          <Label htmlFor="plane-id">Flight Number</Label>
           <Input 
             id="plane-id" 
             value={id} 
             onChange={e => setId(e.target.value)} 
             placeholder="e.g. AA123" 
-            className="font-mono bg-background"
+            className="font-mono"
           />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>Operation</Label>
+            <Label>Action</Label>
             <Select value={operation} onValueChange={(v: OperationType) => setOperation(v)}>
-              <SelectTrigger className="bg-background">
+              <SelectTrigger>
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
               <SelectContent>
@@ -57,9 +57,9 @@ export function PlaneForm({ onAdd }: PlaneFormProps) {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Priority</Label>
+            <Label>Urgency</Label>
             <Select value={priority} onValueChange={(v: PriorityType) => setPriority(v)}>
-              <SelectTrigger className="bg-background">
+              <SelectTrigger>
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
               <SelectContent>
@@ -71,7 +71,7 @@ export function PlaneForm({ onAdd }: PlaneFormProps) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="burst-time">Runway Occupancy (Seconds)</Label>
+          <Label htmlFor="burst-time">Time on Runway (Seconds)</Label>
           <div className="flex items-center gap-4">
             <Input 
               id="burst-time" 
@@ -80,15 +80,14 @@ export function PlaneForm({ onAdd }: PlaneFormProps) {
               max="60" 
               value={burstTime} 
               onChange={e => setBurstTime(parseInt(e.target.value) || 1)}
-              className="bg-background"
             />
-            <span className="text-xs text-muted-foreground whitespace-nowrap">Burst Time</span>
           </div>
+          <p className="text-[10px] text-muted-foreground italic">How long the flight occupies the runway.</p>
         </div>
 
-        <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-white font-bold">
+        <Button type="submit" className="w-full font-bold">
           <PlaneIcon className="w-4 h-4 mr-2" />
-          ADD TO WAITING QUEUE
+          QUEUE FOR RUNWAY
         </Button>
       </form>
     </Card>

@@ -33,40 +33,45 @@ export function SimulationControls({
   onQuantumChange
 }: SimulationControlsProps) {
   return (
-    <Card className="p-6 border-accent/20">
+    <Card className="p-6 border-primary/20 shadow-md">
       <div className="flex items-center gap-2 mb-6">
-        <Settings2 className="w-4 h-4 text-accent" />
-        <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Control Core</h2>
+        <Settings2 className="w-4 h-4 text-primary" />
+        <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Control Panel</h2>
       </div>
 
       <div className="space-y-6">
         <div className="flex gap-2">
           <Button 
             onClick={onToggle}
-            className={`flex-1 font-bold ${isRunning ? 'bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive/20' : 'bg-accent/10 text-accent border-accent/20 hover:bg-accent/20'}`}
-            variant="outline"
+            className={`flex-1 font-bold ${isRunning ? 'bg-amber-100 text-amber-700 hover:bg-amber-200 border-amber-200' : 'bg-primary text-white hover:bg-primary/90'}`}
+            variant={isRunning ? 'outline' : 'default'}
           >
             {isRunning ? <Pause className="w-4 h-4 mr-2" /> : <Play className="w-4 h-4 mr-2" />}
-            {isRunning ? 'PAUSE' : 'START SIM'}
+            {isRunning ? 'PAUSE TRAFFIC' : 'START SIMULATION'}
           </Button>
-          <Button onClick={onReset} variant="outline" className="border-white/10 hover:bg-white/5">
+          <Button onClick={onReset} variant="outline" className="border-muted hover:bg-muted/50">
             <RotateCcw className="w-4 h-4" />
           </Button>
         </div>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label className="text-xs uppercase text-muted-foreground font-bold">Scheduling Logic</Label>
+            <Label className="text-xs uppercase text-muted-foreground font-bold">Scheduling Strategy</Label>
             <Select value={algorithm} onValueChange={(v: SchedulingAlgorithm) => onAlgorithmChange(v)}>
-              <SelectTrigger className="bg-background">
+              <SelectTrigger>
                 <SelectValue placeholder="Algorithm" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="FCFS">First Come First Serve (FCFS)</SelectItem>
-                <SelectItem value="PRIORITY">Priority Scheduling</SelectItem>
-                <SelectItem value="ROUND_ROBIN">Round Robin (RR)</SelectItem>
+                <SelectItem value="PRIORITY">Priority (Emergency First)</SelectItem>
+                <SelectItem value="ROUND_ROBIN">Time-Sharing (Round Robin)</SelectItem>
               </SelectContent>
             </Select>
+            <p className="text-[10px] text-muted-foreground italic">
+              {algorithm === 'FCFS' && "Flights are handled in the exact order they arrive."}
+              {algorithm === 'PRIORITY' && "Emergency flights jump to the front of the line."}
+              {algorithm === 'ROUND_ROBIN' && "Flights take turns on the runway for short periods."}
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -75,7 +80,7 @@ export function SimulationControls({
                 <Cpu className="w-3 h-3" /> Runways
               </Label>
               <Select value={numRunways.toString()} onValueChange={(v) => onNumRunwaysChange(parseInt(v))}>
-                <SelectTrigger className="bg-background">
+                <SelectTrigger>
                   <SelectValue placeholder="Count" />
                 </SelectTrigger>
                 <SelectContent>
@@ -88,14 +93,13 @@ export function SimulationControls({
             
             {algorithm === 'ROUND_ROBIN' && (
               <div className="space-y-2">
-                <Label className="text-xs uppercase text-muted-foreground font-bold">Quantum (s)</Label>
+                <Label className="text-xs uppercase text-muted-foreground font-bold">Time Slice (s)</Label>
                 <Input 
                   type="number" 
                   min="1" 
                   max="10" 
                   value={quantum} 
                   onChange={e => onQuantumChange(parseInt(e.target.value) || 1)}
-                  className="bg-background"
                 />
               </div>
             )}

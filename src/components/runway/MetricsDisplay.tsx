@@ -24,64 +24,64 @@ export function MetricsDisplay({ planes, ticks }: MetricsDisplayProps) {
   return (
     <Card className="p-6">
       <div className="flex items-center gap-2 mb-6">
-        <Activity className="w-4 h-4 text-accent" />
-        <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Performance Metrics</h2>
+        <Activity className="w-4 h-4 text-primary" />
+        <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Efficiency Stats</h2>
       </div>
 
       <div className="grid grid-cols-1 gap-4">
-        <div className="bg-secondary/30 p-4 rounded-lg border border-white/5 flex items-center justify-between">
+        <div className="bg-muted/30 p-4 rounded-lg border flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-accent/10 rounded">
-              <Clock className="w-4 h-4 text-accent" />
+            <div className="p-2 bg-blue-100 rounded text-blue-600">
+              <Clock className="w-4 h-4" />
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase text-muted-foreground">Avg Waiting Time</p>
-              <p className="text-2xl font-mono font-bold text-white">{avgWaiting.toFixed(2)}<span className="text-sm ml-1">s</span></p>
+              <p className="text-[10px] font-bold uppercase text-muted-foreground">Avg Wait Time</p>
+              <p className="text-2xl font-mono font-bold">{avgWaiting.toFixed(2)}<span className="text-sm ml-1">s</span></p>
             </div>
           </div>
           <div className="text-[10px] text-muted-foreground italic max-w-[100px] text-right">
-            Wait = Start - Arrival
+            Time spent waiting for a runway.
           </div>
         </div>
 
-        <div className="bg-secondary/30 p-4 rounded-lg border border-white/5 flex items-center justify-between">
+        <div className="bg-muted/30 p-4 rounded-lg border flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/20 rounded">
-              <Timer className="w-4 h-4 text-primary" />
+            <div className="p-2 bg-purple-100 rounded text-purple-600">
+              <Timer className="w-4 h-4" />
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase text-muted-foreground">Avg Turnaround Time</p>
-              <p className="text-2xl font-mono font-bold text-white">{avgTurnaround.toFixed(2)}<span className="text-sm ml-1">s</span></p>
+              <p className="text-[10px] font-bold uppercase text-muted-foreground">Avg Completion Time</p>
+              <p className="text-2xl font-mono font-bold">{avgTurnaround.toFixed(2)}<span className="text-sm ml-1">s</span></p>
             </div>
           </div>
           <div className="text-[10px] text-muted-foreground italic max-w-[100px] text-right">
-            TAT = Finish - Arrival
+            Total time from arrival to exit.
           </div>
         </div>
 
-        <div className="bg-secondary/30 p-4 rounded-lg border border-white/5 flex items-center justify-between">
+        <div className="bg-muted/30 p-4 rounded-lg border flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-500/10 rounded">
-              <Zap className="w-4 h-4 text-emerald-500" />
+            <div className="p-2 bg-emerald-100 rounded text-emerald-600">
+              <Zap className="w-4 h-4" />
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase text-muted-foreground">Avg Response Time</p>
-              <p className="text-2xl font-mono font-bold text-white">{avgResponse.toFixed(2)}<span className="text-sm ml-1">s</span></p>
+              <p className="text-[10px] font-bold uppercase text-muted-foreground">Avg Response</p>
+              <p className="text-2xl font-mono font-bold">{avgResponse.toFixed(2)}<span className="text-sm ml-1">s</span></p>
             </div>
           </div>
           <div className="text-[10px] text-muted-foreground italic max-w-[100px] text-right">
-            First Run - Arrival
+            Time until first runway access.
           </div>
         </div>
       </div>
 
       <div className="mt-6 space-y-2">
         <div className="flex justify-between items-end">
-          <span className="text-[10px] font-bold uppercase text-muted-foreground">Total Sim Time</span>
-          <span className="font-mono text-xl font-bold">T+{ticks}</span>
+          <span className="text-[10px] font-bold uppercase text-muted-foreground">Simulation Time</span>
+          <span className="font-mono text-xl font-bold">{ticks}s</span>
         </div>
-        <div className="h-1 bg-secondary rounded-full overflow-hidden">
-          <div className="h-full bg-accent w-full animate-pulse"></div>
+        <div className="h-2 bg-muted rounded-full overflow-hidden">
+          <div className="h-full bg-primary w-full animate-pulse"></div>
         </div>
       </div>
     </Card>
