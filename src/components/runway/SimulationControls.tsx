@@ -50,12 +50,12 @@ export function SimulationControls({
                 <SelectValue placeholder="Select Method" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="FCFS">First-Come, First-Served</SelectItem>
-                <SelectItem value="SJF_NON_PREEMPTIVE">Shortest Job First</SelectItem>
-                <SelectItem value="SJF_PREEMPTIVE">Shortest Remaining Time First</SelectItem>
-                <SelectItem value="PRIORITY_NON_PREEMPTIVE">Priority (Non-Preemptive)</SelectItem>
-                <SelectItem value="PRIORITY_PREEMPTIVE">Priority (Preemptive)</SelectItem>
-                <SelectItem value="ROUND_ROBIN">Time-Sharing (Round Robin)</SelectItem>
+                <SelectItem value="FCFS">Arrival Order (First-Come, First-Served)</SelectItem>
+                <SelectItem value="SJF_NON_PREEMPTIVE">Quick Jobs First (Shortest Job First)</SelectItem>
+                <SelectItem value="SJF_PREEMPTIVE">Finish Fastest First (Shortest Remaining Time First)</SelectItem>
+                <SelectItem value="PRIORITY_NON_PREEMPTIVE">Priority – No Interruptions (Priority Non-Preemptive)</SelectItem>
+                <SelectItem value="PRIORITY_PREEMPTIVE">Priority – Can Interrupt (Priority Preemptive)</SelectItem>
+                <SelectItem value="ROUND_ROBIN">Take Turns (Round Robin)</SelectItem>
               </SelectContent>
             </Select>
           </div>
