@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plane, OperationType, PriorityType } from '@/types/simulation';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -14,10 +14,15 @@ interface PlaneFormProps {
 }
 
 export function PlaneForm({ onAdd }: PlaneFormProps) {
-  const [id, setId] = useState('P-' + Math.floor(Math.random() * 90 + 10));
+  const [id, setId] = useState('P-00');
   const [operation, setOperation] = useState<OperationType>('LANDING');
   const [priority, setPriority] = useState<PriorityType>('NORMAL');
   const [burstTime, setBurstTime] = useState(5);
+
+  useEffect(() => {
+    // Generate a random ID only after mounting to avoid hydration mismatch
+    setId('P-' + Math.floor(Math.random() * 90 + 10));
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
