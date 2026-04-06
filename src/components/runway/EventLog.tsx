@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { SystemEvent } from '@/types/simulation';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -12,6 +12,22 @@ interface EventLogProps {
 }
 
 export function EventLog({ logs }: EventLogProps) {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const formatTime = (timestamp: number) => {
+    if (!isMounted) return "--:--:--";
+    return new Date(timestamp).toLocaleTimeString([], { 
+      hour12: false, 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      second: '2-digit' 
+    });
+  };
+
   return (
     <Card className="p-6 border-none shadow-sm bg-white rounded-2xl">
       <div className="flex items-center gap-2 mb-4">
@@ -30,7 +46,7 @@ export function EventLog({ logs }: EventLogProps) {
             logs.map((log, i) => (
               <div key={i} className="flex gap-3 text-xs p-2.5 rounded-xl border border-slate-50 hover:bg-slate-50 transition-colors">
                 <span className="text-slate-400 font-bold shrink-0">
-                  {new Date(log.timestamp).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                  {formatTime(log.timestamp)}
                 </span>
                 <span className={cn(
                   "font-medium",

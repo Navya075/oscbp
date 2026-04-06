@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plane } from '@/types/simulation';
 import { Card } from '@/components/ui/card';
 import { Activity, Clock, CheckCircle, Timer } from 'lucide-react';
@@ -11,6 +11,12 @@ interface MetricsDisplayProps {
 }
 
 export function MetricsDisplay({ planes, ticks }: MetricsDisplayProps) {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const completedPlanes = planes.filter(p => p.status === 'COMPLETED');
   
   const waitingTimes = completedPlanes.map(p => (p.startTime || 0) - p.arrivalTime);
@@ -48,7 +54,7 @@ export function MetricsDisplay({ planes, ticks }: MetricsDisplayProps) {
             </div>
             <div>
               <p className="text-xs font-bold text-blue-700 uppercase">Avg. Waiting Time</p>
-              <p className="text-2xl font-bold text-blue-900">{avgWaiting.toFixed(1)}s</p>
+              <p className="text-2xl font-bold text-blue-900">{isMounted ? avgWaiting.toFixed(1) : "0.0"}s</p>
             </div>
           </div>
         </div>
@@ -60,7 +66,7 @@ export function MetricsDisplay({ planes, ticks }: MetricsDisplayProps) {
             </div>
             <div>
               <p className="text-xs font-bold text-purple-700 uppercase">Avg. Cycle Time</p>
-              <p className="text-2xl font-bold text-purple-900">{avgTurnaround.toFixed(1)}s</p>
+              <p className="text-2xl font-bold text-purple-900">{isMounted ? avgTurnaround.toFixed(1) : "0.0"}s</p>
             </div>
           </div>
         </div>
