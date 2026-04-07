@@ -14,6 +14,7 @@ interface PlaneFormProps {
 }
 
 export function PlaneForm({ onAdd }: PlaneFormProps) {
+  // Use a stable initial value to avoid hydration mismatch
   const [id, setId] = useState('P-00');
   const [operation, setOperation] = useState<OperationType>('LANDING');
   const [priority, setPriority] = useState<PriorityType>('NORMAL');
@@ -27,6 +28,7 @@ export function PlaneForm({ onAdd }: PlaneFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onAdd({ id, operation, priority, burstTime });
+    // Reset to a new random ID immediately
     setId('P-' + Math.floor(Math.random() * 90 + 10));
   };
 
